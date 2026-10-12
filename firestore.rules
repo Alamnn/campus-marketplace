@@ -1,0 +1,61 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Helper functions
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    function isAdmin() {
+      return isAuthenticated() && (
+        request.auth.token.email == 'admin@university.edu' ||
+        request.auth.token.role == 'admin'
+      );
+    }
+
+    // Products / Listings
+    match /products/{productId} {
+      allow read: if true;
+      allow create: if request.resource.data.title is string &&
+                       request.resource.data.price is number;
+      allow update: if true;
+      allow delete: if true;
+    }
+
+    // Users
+    match /users/{userId} {
+      allow read: if true;
+      allow create, update: if request.resource.data.email is string;
+      allow delete: if isAdmin();
+    }
+
+    // Verification Codes (OTP)
+    match /otps/{otpId} {
+      allow read, write: if true;
+    }
+
+    // Activities & Events
+    match /activities/{activityId} {
+      allow read: if true;
+      allow create, update: if request.resource.data.title is string;
+      allow delete: if isAdmin();
+    }
+
+    // Chats / Conversations
+    match /chats/{chatId} {
+      allow read, write: if true;
+    }
+
+    // Audit Logs
+    match /auditLogs/{logId} {
+      allow read, write: if true;
+    }
+
+    // Admin Settings
+    match /adminSettings/{settingId} {
+      allow read: if true;
+      allow write: if true;
+    }
+  }
+}
